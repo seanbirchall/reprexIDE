@@ -25,6 +25,7 @@ ui <- bslib::page(
     shiny::tags$script(
       type = "text/javascript", src = "df_viewer2.js"
     ),
+    # js to load right away ----
     shiny::tags$script(
       type = "text/javascript", src = "view.js"
     ),
@@ -48,6 +49,11 @@ ui <- bslib::page(
   # hidden ----
   shiny::actionButton(
     inputId = "style",
+    label = NULL,
+    style = "display: none;"
+  ),
+  shiny::actionButton(
+    inputId = "logged_in",
     label = NULL,
     style = "display: none;"
   ),
@@ -109,12 +115,6 @@ ui <- bslib::page(
     shiny::tags$script(
       type = "text/javascript", src = "w2ui.js"
     ),
-    # shiny::tags$script(
-    #   type = "text/javascript", src = "active_tab.js"
-    # ),
-    shiny::tags$script(
-      type = "text/javascript", src = "check_auth.js"
-    ),
     shiny::tags$script(
       type = "text/javascript", src = "handlers.js"
     ),
@@ -124,18 +124,6 @@ ui <- bslib::page(
     shiny::tags$script(
       type = "text/javascript", src = "events.js"
     ),
-    # shiny::tags$script(
-    #   type = "text/javascript", src = "modalActive.js"
-    # ),
-    # shiny::tags$script(
-    #   type = "text/javascript", src = "authenticate.js"
-    # ),
-    # shiny::tags$script(
-    #   type = "text/javascript", src = "copy_by_id.js"
-    # ),
-    # shiny::tags$script(
-    #   type = "text/javascript", src = "put_code.js"
-    # ),
     shiny::tags$script(
       type = "text/javascript", src = "keyboard_shortcuts.js"
     )
@@ -195,8 +183,22 @@ server <- function(input, output, session) {
     ide = ide
   )
 
-  # check auth on-load ----
-  session$sendCustomMessage("check_auth", list())
+  # check auth on-load set logged in ----
+  session$sendCustomMessage(
+    "check_refresh_token",
+    message = list(
+      inputId = "tokens"
+    )
+  )
+  shiny::observeEvent(input$tokens, {
+    if(input$tokens[["status"]] == "success"){
+      session$userData$logged_in <- TRUE
+      return()
+    }
+    session$userData$logged_in <- FALSE
+  })
+
+  # recheck login ----
 
   # style code ----
   shiny::observeEvent(input$style, {
@@ -285,7 +287,6 @@ server <- function(input, output, session) {
     }
   })
 
-  # session$sendCustomMessage("refreshToken", list())
   # on start observe query parameters ----
   shiny::observeEvent(session$clientData$url_search, {
     query <- parseQueryString(session$clientData$url_search)
@@ -344,34 +345,6 @@ server <- function(input, output, session) {
           id = "notification_link"
         )
       }
-    }
-  })
-
-  # set token in session user data ----
-  observeEvent(input$is_logged_in, {
-    session$userData$authentication <- input$is_logged_in
-  })
-
-  # successful share code ----
-  shiny::observeEvent(input$code_received, {
-    ide$code_received <- as.numeric(input$code_received)
-  })
-  shiny::observeEvent(ide$code_received, {
-    if(length(ide$code_received) > 0){
-      show_notification(
-        type = "success",
-        msg = "Share Link Ready!",
-        duration = 5,
-        id = "notification_share"
-      )
-      ide$show_share <- ide$show_share + 1
-    }else{
-      show_notification(
-        type = "error",
-        msg = "Share Link Failed",
-        duration = 5,
-        id = "notification_share"
-      )
     }
   })
 
