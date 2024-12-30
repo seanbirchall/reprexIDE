@@ -149,8 +149,8 @@ server_header <- function(id, ide){
           if(!is.null(payload)){
             session$sendCustomMessage(
               "put_code",
-              message = list(
-                inputId = ns("put_code_response"),
+              list(
+                inputId = "put_code_response",
                 payload = payload
               )
             )
