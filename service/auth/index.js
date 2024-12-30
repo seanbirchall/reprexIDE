@@ -85,13 +85,7 @@ app.get('/logout', async (req, res) => {
     res.clearCookie('access_token');
     res.clearCookie('refresh_token');
     res.clearCookie('is_logged_in'); 
-
-    // redirect to cognito logout
-    const logoutUrl = `${process.env.COGNITO_DOMAIN}/logout?` +
-        `client_id=${process.env.COGNITO_CLIENT_ID}&` +
-        `logout_uri=${encodeURIComponent('https://reprex.org')}`;
-    
-    res.redirect(logoutUrl);
+    res.redirect('https://reprex-org.auth.us-east-2.amazoncognito.com/login?client_id=4agp589aqu7nu1fdog4pav4gpg&redirect_uri=https://reprex.org/auth/callback&response_type=code&scope=openid');
 });
 
 // refresh access token if refresh token available
