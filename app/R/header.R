@@ -115,7 +115,7 @@ server_header <- function(id, ide){
 
       # observe share link ----
       shiny::observeEvent(input$share, {
-        if(session$userData$authentication){
+        if(session$userData$logged_in){
           ## share notification ----
           show_notification(
             type = "loading",
@@ -144,11 +144,6 @@ server_header <- function(id, ide){
           }else{
             id <- ide$last_id
             payload <- NULL
-            if(ide$code_received > 0){
-              ide$code_received <- as.integer(Sys.time())
-            }else{
-              ide$code_received <- -as.integer(Sys.time())
-            }
           }
           ## send payload if not null ----
           if(!is.null(payload)){
@@ -177,6 +172,10 @@ server_header <- function(id, ide){
 
       # put code response ----
       shiny::observeEvent(input$put_code_response, {
+        ide$put_code_response <- input$put_code_response
+      })
+      shiny::observeEvent(ide$put_code_response, {
+        response <- ide$put_code_response
         if(response$status == "success"){
           removeNotification(id = "notification_share")
           show_notification(

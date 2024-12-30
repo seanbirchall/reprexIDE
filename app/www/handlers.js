@@ -1,6 +1,6 @@
 // put code to digitial ocean
-Shiny.addCustomMessageHandler("put_code", function(inputId, message) {
-  const { payload, token } = message;  // Destructure both payload and token
+Shiny.addCustomMessageHandler("put_code", function(message) {
+  const { inputId, payload } = message;
   fetch('https://reprex.org/put/code/', {
     method: 'POST',
     credentials: 'include',
@@ -23,7 +23,6 @@ Shiny.addCustomMessageHandler("put_code", function(inputId, message) {
     });
   })
   .catch(error => {
-    console.error('Error:', error);
     Shiny.setInputValue(inputId, {
       status: 'error',
       timestamp: Date.now(),
@@ -33,24 +32,33 @@ Shiny.addCustomMessageHandler("put_code", function(inputId, message) {
 });
 
 // check for refresh token
-Shiny.addCustomMessageHandler('check_refresh_token', function(inputId, message) {
+Shiny.addCustomMessageHandler('check_refresh_token', function(message) {
+  const { inputId } = message;
   fetch('https://reprex.org/auth/refresh', {
     method: 'GET',
     credentials: 'include'
   })
   .then(response => {
     if (response.status === 200) {
-      console.log('refreshed successfully');
-      Shiny.setInputValue(inputId, true);
+      Shiny.setInputValue(inputId, {
+        status: 'success',
+        timestamp: Date.now(),
+        data: response
+      })
     } else {
-      // Refresh failed
-      console.log('refresh failed');
-      Shiny.setInputValue(inputId, false);
+      Shiny.setInputValue(inputId, {
+        status: 'error',
+        timestamp: Date.now(),
+        data: response
+      })
     }
   })
   .catch(error => {
-    console.error('refresh error:', error);
-    Shiny.setInputValue(inputId, false);
+    Shiny.setInputValue(inputId, {
+        status: 'error',
+        timestamp: Date.now(),
+        data: error
+      })
   });
 });
 
