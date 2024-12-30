@@ -186,7 +186,7 @@ server <- function(input, output, session) {
   # check auth on-load set logged in ----
   session$sendCustomMessage(
     "check_refresh_token",
-    message = list(
+    list(
       inputId = "tokens"
     )
   )
@@ -320,7 +320,7 @@ server <- function(input, output, session) {
           name <- as.character(name[grep("\\.name$", names(name))])
           session$sendCustomMessage(
             "initialize_tabs",
-            message = list(
+            list(
               tabs = name
             )
           )

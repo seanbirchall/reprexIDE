@@ -524,7 +524,7 @@ eval_code <- function(code, ext, session = shiny::getDefaultReactiveDomain()){
     tic <- format(Sys.time(), "%Y-%m-%d %H:%M:%S")
     session$sendCustomMessage(
       "duckdb_sql",
-      message = list(
+      list(
         sql = code,
         id = id
       )

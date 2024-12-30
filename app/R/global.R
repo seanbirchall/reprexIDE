@@ -46,7 +46,7 @@ with(scrapeable, {
     id <- uuid::UUIDgenerate()
     session$sendCustomMessage(
       "duckdb_r",
-      message = list(
+      list(
         url = url,
         query = query,
         id = id
@@ -144,7 +144,7 @@ with(scrapeable, {
     shinyjs::delay(1, shinyjs::click(id = "control-viewer-show", asis = TRUE))
     session$sendCustomMessage(
       "view",
-      message = list(
+      list(
         obj = obj
       )
     )
