@@ -140,40 +140,56 @@ app.post('/validate', async (req, res) => {
     const token = req.cookies.access_token;
     
     if (!token) {
-        return res.status(400).json({ valid: false, error: 'No token provided' });
+        return res.status(400)
+            .json({ valid: false, error: 'No token provided' });
     }
     
     try {
-        const response = await axios.get(
-            `${process.env.COGNITO_DOMAIN}/oauth2/userInfo`,
-            {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            }
-        );
-        
-        // The 'sub' claim is the unique identifier we want
-        const userId = response.data.sub;
-        
-        return res.status(200).json({
-            valid: true,
-            userId: userId,  // Include this in the response
-            user: response.data
+        // Add timeout to axios request
+        const response = await axios({
+            method: 'get',
+            url: `${process.env.COGNITO_DOMAIN}/oauth2/userInfo`,
+            headers: {
+                'Authorization': `Bearer ${token}`
+            },
+            timeout: 5000  // 5 second timeout
         });
+        
+        const userId = response.data.sub;
+        // Set custom header for nginx auth_request_set
+        res.setHeader('X-User-Id', userId);
+        
+        return res.status(200)
+            .json({
+                valid: true,
+                userId: userId,
+                user: response.data
+            });
         
     } catch (error) {
-        if (error.response?.status === 401) {
-            return res.status(401).json({
-                valid: false,
-                error: 'Invalid or expired token'
-            });
+        console.error('Validation error:', error.message);
+        
+        if (error.code === 'ECONNABORTED') {
+            return res.status(504)
+                .json({
+                    valid: false,
+                    error: 'Request timeout'
+                });
         }
         
-        return res.status(500).json({
-            valid: false,
-            error: 'Error validating token'
-        });
+        if (error.response?.status === 401) {
+            return res.status(401)
+                .json({
+                    valid: false,
+                    error: 'Invalid or expired token'
+                });
+        }
+        
+        return res.status(500)
+            .json({
+                valid: false,
+                error: 'Error validating token'
+            });
     }
 });
 
