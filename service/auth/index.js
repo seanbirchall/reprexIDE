@@ -136,7 +136,7 @@ app.get('/refresh', async (req, res) => {
 });
 
 // validate access token internally
-app.post('/validate', async (req, res) => {
+app.get('/validate', async (req, res) => {
     // Check the Cookie header directly
     const cookieHeader = req.headers.cookie;
     
