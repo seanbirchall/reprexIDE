@@ -137,74 +137,73 @@ app.get('/refresh', async (req, res) => {
 
 // validate access token internally
 app.get('/validate', async (req, res) => {
-    // Check the Cookie header directly
-    const cookieHeader = req.headers.cookie;
-    
-    if (!cookieHeader) {
-        return res.status(400)
-            .json({ valid: false, error: 'No cookie header provided' });
-    }
-
-    // Parse the cookie header manually
-    const cookies = cookieHeader.split(';').reduce((acc, cookie) => {
-        const [key, value] = cookie.trim().split('=');
-        acc[key] = value;
-        return acc;
-    }, {});
-
-    const token = cookies.access_token;
-    
-    if (!token) {
-        return res.status(400)
-            .json({ valid: false, error: 'No access token in cookie' });
-    }
-    
     try {
-        // Add timeout to axios request
+        console.log('=== Debug Info ===');
+        console.log('COGNITO_DOMAIN:', process.env.COGNITO_DOMAIN);
+        console.log('Headers:', req.headers);
+        
+        const cookieHeader = req.headers.cookie;
+        console.log('Cookie header:', cookieHeader);
+        
+        if (!cookieHeader) {
+            throw new Error('No cookie header provided');
+        }
+
+        // Parse cookies and get token
+        const cookies = cookieHeader.split(';').reduce((acc, cookie) => {
+            const [key, value] = cookie.trim().split('=');
+            acc[key] = value;
+            return acc;
+        }, {});
+        
+        console.log('Parsed cookies:', cookies);
+        const token = cookies.access_token;
+        
+        if (!token) {
+            throw new Error('No access token found in cookies');
+        }
+
+        console.log('Token found, attempting Cognito request');
+        console.log('Request URL:', `${process.env.COGNITO_DOMAIN}/oauth2/userInfo`);
+        
         const response = await axios({
             method: 'get',
             url: `${process.env.COGNITO_DOMAIN}/oauth2/userInfo`,
             headers: {
                 'Authorization': `Bearer ${token}`
             },
-            timeout: 5000  // 5 second timeout
+            timeout: 5000
         });
-
-        const userId = response.data.sub;
-        // Set custom header for nginx auth_request_set
-        res.setHeader('X-User-Id', userId);
         
-        return res.status(200)
-            .json({
-                valid: true,
-                userId: userId,
-                user: response.data
-            });
+        const userId = response.data.sub;
+        console.log('Successfully validated user:', userId);
+        
+        res.setHeader('X-User-Id', userId);
+        return res.status(200).json({
+            valid: true,
+            userId: userId,
+            user: response.data
+        });
         
     } catch (error) {
-        console.error('Validation error:', error.message);
-        
-        if (error.code === 'ECONNABORTED') {
-            return res.status(504)
-                .json({
-                    valid: false,
-                    error: 'Request timeout'
-                });
-        }
+        console.error('Full error:', {
+            message: error.message,
+            stack: error.stack,
+            response: error.response?.data,
+            config: error.config
+        });
         
         if (error.response?.status === 401) {
-            return res.status(401)
-                .json({
-                    valid: false,
-                    error: 'Invalid or expired token'
-                });
+            return res.status(401).json({
+                valid: false,
+                error: 'Invalid or expired token'
+            });
         }
         
-        return res.status(500)
-            .json({
-                valid: false,
-                error: 'Error validating token'
-            });
+        return res.status(500).json({
+            valid: false,
+            error: error.message || 'Error validating token'
+        });
     }
 });
 
