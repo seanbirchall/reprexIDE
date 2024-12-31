@@ -137,11 +137,26 @@ app.get('/refresh', async (req, res) => {
 
 // validate access token internally
 app.post('/validate', async (req, res) => {
-    const token = req.cookies.access_token;
+    // Check the Cookie header directly
+    const cookieHeader = req.headers.cookie;
+    
+    if (!cookieHeader) {
+        return res.status(400)
+            .json({ valid: false, error: 'No cookie header provided' });
+    }
+
+    // Parse the cookie header manually
+    const cookies = cookieHeader.split(';').reduce((acc, cookie) => {
+        const [key, value] = cookie.trim().split('=');
+        acc[key] = value;
+        return acc;
+    }, {});
+
+    const token = cookies.access_token;
     
     if (!token) {
         return res.status(400)
-            .json({ valid: false, error: 'No token provided' });
+            .json({ valid: false, error: 'No access token in cookie' });
     }
     
     try {
@@ -154,7 +169,7 @@ app.post('/validate', async (req, res) => {
             },
             timeout: 5000  // 5 second timeout
         });
-        
+
         const userId = response.data.sub;
         // Set custom header for nginx auth_request_set
         res.setHeader('X-User-Id', userId);
