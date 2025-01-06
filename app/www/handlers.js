@@ -7,27 +7,21 @@ Shiny.addCustomMessageHandler("put_code", function(message) {
     headers: {
       'Content-Type': 'application/json'
     },
-    body: JSON.stringify(payload)  // payload already contains code and id
+    body: JSON.stringify(payload)
   })
-  .then(response => {
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    return response.json();
+  .then((data) => {
+    // handle data response
+    data.json().then((res) => {
+      Shiny.setInputValue(inputId, res, {priority: 'event'});
+    })
+    // handle json error
+    .catch((error) => {
+      Shiny.setInputValue(inputId, error, {priority: 'event'});
+    })
   })
-  .then(data => {
-    Shiny.setInputValue(inputId, {
-      status: 'success',
-      timestamp: Date.now(),
-      data: data
-    });
-  })
-  .catch(error => {
-    Shiny.setInputValue(inputId, {
-      status: 'error',
-      timestamp: Date.now(),
-      error: error.message
-    });
+  // handle api error
+  .catch((error) => {
+    Shiny.setInputValue(inputId, error, {priority: 'event'});
   });
 });
 
