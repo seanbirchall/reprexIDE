@@ -150,7 +150,7 @@ server_header <- function(id, ide){
             session$sendCustomMessage(
               "put_code",
               list(
-                inputId = "put_code_response",
+                inputId = ns("put_code_response"),
                 payload = payload
               )
             )
@@ -172,6 +172,7 @@ server_header <- function(id, ide){
 
       # put code response ----
       shiny::observeEvent(input$put_code_response, {
+        message(input$put_code_response)
         ide$put_code_response <- input$put_code_response
       })
       shiny::observeEvent(ide$put_code_response, {
