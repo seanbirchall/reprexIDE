@@ -1,0 +1,15 @@
+# Enhanced cache headers for webR
+/*.wasm
+  Cache-Control: public, max-age=31536000, immutable
+
+/webr*.js
+  Cache-Control: public, max-age=31536000, immutable
+
+/R/library/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# Required WASM security headers
+/*
+  Cross-Origin-Embedder-Policy: require-corp
+  Cross-Origin-Opener-Policy: same-origin
+  Cross-Origin-Resource-Policy: cross-origin

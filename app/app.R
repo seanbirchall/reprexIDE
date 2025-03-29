@@ -1,6 +1,7 @@
+# ui function ----
 ui <- bslib::page(
 
-  # global ----
+  ## global ----
   shinyjs::useShinyjs(),
   title = "REPREX IDE",
   theme = bslib::bs_theme(
@@ -11,42 +12,22 @@ ui <- bslib::page(
     `enable-transitions` = FALSE
   ),
 
-  # css ----
+  ## css ----
   shiny::tags$head(
-    shiny::tags$link(
-      rel = "stylesheet", type = "text/css", href = "handsontable.css"
-    ),
-    tags$script(
-      type = "module", src = "duckdb.js"
-    ),
-    shiny::tags$script(
-      type = "text/javascript", src = "handsontable.js"
-    ),
-    shiny::tags$script(
-      type = "text/javascript", src = "df_viewer2.js"
-    ),
+    shiny::tags$link(rel = "stylesheet", type = "text/css", href = "handsontable.css"),
+    tags$script(type = "module", src = "duckdb.js"),
+    shiny::tags$script(type = "text/javascript", src = "handsontable.js"),
+    shiny::tags$script(type = "text/javascript", src = "df_viewer2.js"),
     # js to load right away ----
-    shiny::tags$script(
-      type = "text/javascript", src = "view.js"
-    ),
-    shiny::tags$script(
-      type = "text/javascript", src = "dropdown.js"
-    ),
-    shiny::tags$link(
-      rel = "stylesheet", type = "text/css", href = "style.css"
-    ),
-    shiny::tags$link(
-      rel = "stylesheet", type = "text/css", href = "split.css"
-    ),
-    shiny::tags$link(
-      rel = "stylesheet", type = "text/css", href = "w2ui.css"
-    ),
-    shiny::tags$link(
-      rel = "stylesheet", type = "text/css", href = "w2ui-2.0.min.css"
-    )
+    shiny::tags$script(type = "text/javascript", src = "view.js"),
+    shiny::tags$script(type = "text/javascript", src = "dropdown.js"),
+    shiny::tags$link(rel = "stylesheet", type = "text/css", href = "style.css"),
+    shiny::tags$link(rel = "stylesheet", type = "text/css", href = "split.css"),
+    shiny::tags$link(rel = "stylesheet", type = "text/css", href = "w2ui.css"),
+    shiny::tags$link(rel = "stylesheet", type = "text/css", href = "w2ui-2.0.min.css")
   ),
 
-  # hidden ----
+  ## hidden ----
   shiny::actionButton(
     inputId = "style",
     label = NULL,
@@ -58,7 +39,7 @@ ui <- bslib::page(
     style = "display: none;"
   ),
 
-  # content ----
+  ## content ----
   bslib::card(
     class = "main-container",
     full_screen = FALSE,
@@ -101,38 +82,23 @@ ui <- bslib::page(
     )
   ),
 
-  # js ----
+  ## js ----
   shiny::tags$footer(
-    shiny::tags$script(
-      type = "text/javascript", src = "split.min.JS"
-    ),
-    shiny::tags$script(
-      type = "text/javascript", src = "split.js"
-    ),
-    shiny::tags$script(
-      type = "text/javascript", src = "w2ui-2.0.min.js"
-    ),
-    shiny::tags$script(
-      type = "text/javascript", src = "w2ui.js"
-    ),
-    shiny::tags$script(
-      type = "text/javascript", src = "handlers.js"
-    ),
-    shiny::tags$script(
-      type = "text/javascript", src = "utils.js"
-    ),
-    shiny::tags$script(
-      type = "text/javascript", src = "events.js"
-    ),
-    shiny::tags$script(
-      type = "text/javascript", src = "keyboard_shortcuts.js"
-    )
+    shiny::tags$script(type = "text/javascript", src = "split.min.JS"),
+    shiny::tags$script(type = "text/javascript", src = "split.js"),
+    shiny::tags$script(type = "text/javascript", src = "w2ui-2.0.min.js"),
+    shiny::tags$script(type = "text/javascript", src = "w2ui.js"),
+    shiny::tags$script(type = "text/javascript", src = "handlers.js"),
+    shiny::tags$script(type = "text/javascript", src = "utils.js"),
+    shiny::tags$script(type = "text/javascript", src = "events.js"),
+    shiny::tags$script(type = "text/javascript", src = "keyboard_shortcuts.js")
   )
 )
 
+# server function ----
 server <- function(input, output, session) {
 
-  # on-load ide ----
+  ## on-load ide ----
   ide <- shiny::reactiveValues(
     tabs = list(
       tab1 = list(
@@ -157,7 +123,7 @@ server <- function(input, output, session) {
     )
   )
 
-  # sub-modules ----
+  ## sub-modules ----
   server_header(
     id = "header",
     ide = ide
@@ -183,7 +149,7 @@ server <- function(input, output, session) {
     ide = ide
   )
 
-  # check auth on-load set logged in ----
+  ## check auth on-load set logged in ----
   session$sendCustomMessage(
     "check_refresh_token",
     list(
@@ -198,9 +164,9 @@ server <- function(input, output, session) {
     session$userData$logged_in <- FALSE
   })
 
-  # recheck login ----
+  ## recheck login ----
 
-  # style code ----
+  ## style code ----
   shiny::observeEvent(input$style, {
     code <- gsub("\r\n", "\n", input[["editor-ace"]])
     code <- tryCatch(
@@ -218,29 +184,29 @@ server <- function(input, output, session) {
     )
   })
 
-  # extension ----
+  ## extension ----
   observeEvent(ide$tab_selected, {
     ide$tab_selected_extension <- tolower(
       tools::file_ext(ide$tabs[[ide$tab_selected]][["name"]])
     )
   })
 
-  # selected tab ----
+  ## selected tab ----
   observeEvent(input$tab, {
     tab_new <- input$tab
     ide$tab_selected <- tab_new
-    ## save previous tab code ----
+    ### save previous tab code ----
     if(!is.null(ide$tab_previous)){
       ide$tabs[[ide$tab_previous]][["code"]] <- input[["editor-ace"]]
     }
-    ## create new tab ----
+    ### create new tab ----
     if(!tab_new %in% names(ide$tabs)){
       ide$tabs[[tab_new]][["code"]] <- ""
       tab_name <- paste0("script", gsub("[^0-9]", "", tab_new), ".R")
       ide$tabs[[tab_new]][["name"]] <- tab_name
       ide$tabs_available <- c(ide$tabs_available, tab_new)
     }
-    ## Update Ace with code ----
+    ### Update Ace with code ----
     updateAceEditor(
       session = session,
       editorId = "editor-ace",
@@ -249,7 +215,7 @@ server <- function(input, output, session) {
     ide$tab_previous <- tab_new
   })
 
-  # tab close ----
+  ## tab close ----
   observeEvent(input$tab_close, {
     tab_to_close <- input$tab_close
     ide$tabs_available <- ide$tabs_available[!ide$tabs_available %in% tab_to_close]
@@ -274,7 +240,7 @@ server <- function(input, output, session) {
     }
   })
 
-  # tab edited ----
+  ## tab edited ----
   shiny::observeEvent(input$tab_edit, {
     tab_edit <- input$tab_edit
     tab_edited <- tab_edit[["tabId"]]
@@ -287,11 +253,11 @@ server <- function(input, output, session) {
     }
   })
 
-  # on start observe query parameters ----
+  ## on start observe query parameters ----
   shiny::observeEvent(session$clientData$url_search, {
     query <- parseQueryString(session$clientData$url_search)
 
-    ## initialize tabs on app start ----
+    ### initialize tabs on app start ----
     if(!is.null(query[['ide']])){
       if(nchar(query[['ide']]) == 36){
         lookup <- tryCatch(
@@ -348,12 +314,12 @@ server <- function(input, output, session) {
     }
   })
 
-  # df_viewer modal ----
+  ## df_viewer modal ----
   shiny::observeEvent(input$modal_df_viewer, {
     ide$modal_df_viewer <- input$modal_df_viewer
   })
 
-  # duckdb ----
+  ## duckdb ----
   shiny::observeEvent(input$duckdb_r_result, {
     evals <- duckdb_response(
       result = input$duckdb_r_result,
@@ -389,7 +355,7 @@ server <- function(input, output, session) {
     ide$environment <- get_environment()
   })
 
-  # duckdb sql ----
+  ## duckdb sql ----
   observeEvent(input$duckdb_sql_result, {
     result <- input$duckdb_sql_result
     evals <- list(
@@ -422,7 +388,7 @@ server <- function(input, output, session) {
     ide$viewer_window[["id"]] <- uuid::UUIDgenerate()
   })
 
-  # view shim ----
+  ## view shim ----
   shiny::observeEvent(input$view, {
     code <- input$view[["object"]]
     parse <- evals(code)
@@ -435,4 +401,5 @@ server <- function(input, output, session) {
   })
 }
 
+# run app ----
 shinyApp(ui = ui, server = server)

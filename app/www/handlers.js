@@ -1,4 +1,4 @@
-// put code to digitial ocean
+// put code to cloud
 Shiny.addCustomMessageHandler("put_code", function(message) {
   const { inputId, payload } = message;
   fetch('https://reprex.org/put/code/', {
@@ -66,7 +66,7 @@ Shiny.addCustomMessageHandler("duckdb_r", function(message) {
   runQuery(message.query, message.url, message.id);
 });
 
-// view object using df_viewer
+// view object using viewer
 Shiny.addCustomMessageHandler("view", function(message) {
   Shiny.setInputValue('view', {object: message.obj, id: Date.now()})
 });
