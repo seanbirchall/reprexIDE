@@ -5,7 +5,7 @@ ui_sidebar <- function(id="sidebar"){
   bslib::sidebar(
     id = ns("bar"),
     class = "container-sidebar",
-    open = FALSE,
+    open = TRUE,
     shiny::tags$div(
       class = "container-header"
     ),
